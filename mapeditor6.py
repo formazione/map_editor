@@ -92,11 +92,17 @@ def save_last_map():
 
     with open("last_map.pkl", "wb") as file:
         pickle.dump(map1, file)
+    with open("last_map0.pkl", "wb") as file:
+        pickle.dump(map0, file)
 
 def load_last_map(mp):
+    if mp == map1:
+        filename = "last_map.pkl"
+    elif mp == map0:
+        filename = "last_map0.pkl"
 
-    if "last_map.pkl" in os.listdir():
-        with open("last_map.pkl", "rb") as file:
+    if filename in os.listdir():
+        with open(filename, "rb") as file:
             mp = pickle.load(file)
     return mp
 

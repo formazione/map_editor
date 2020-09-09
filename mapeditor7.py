@@ -30,18 +30,18 @@ def init_display():
     screen = pygame.display.set_mode(WINDOW_SIZE, 0, 32)
     display = pygame.Surface((WINDOW_SIZE[0] // 2, WINDOW_SIZE[1] // 2))
 
-    listtiles = [x for x in glob("imgs\\brick*.png")]
+    listtiles = [x for x in glob("imgs\\*.png")]
     tile = [pygame.image.load(x) for x in listtiles]
     clock = pygame.time.Clock()
 
 
 cnt = 0
-def blit_tiles(map1):
+def blit_tiles(mp1):
     "Display all the bricks, called by while loop"
 
     global tile, letters
 
-    for y, line in enumerate(map1):
+    for y, line in enumerate(mp1):
         for x, c in enumerate(line):
             for n, l in enumerate(letters):
                 if c == l:
@@ -60,7 +60,10 @@ def map_to_list():
 # Create the map
 map1 = map_to_list()
 map0 = map_to_list()
+map00 = map_to_list()
+
 map0[0][0] = "w"
+
 pygame.init()
 init_display()
 loop = 1
@@ -77,20 +80,15 @@ letters = [x for x in alphab[:len(tile)]]
 
 # This places a brick or a tile when hit button left
 # deletes bricks/blit_tiles when hit button right
-def place_block(actual_tile, x, y, m=1):
+def place_block(actual_tile, x, y, mp):
     x, y = pygame.mouse.get_pos()
     x, y = x // 32, y // 32
-    if m:
-        map1[y][x] =  actual_tile
-    elif m==0:
-        map0[y][x] =  actual_tile
-    elif m==-1:
-        map00[y][x] =  actual_tile
+    mp[y][x] =  actual_tile
+
 
 
 
 def save_last_map():
-    global map1
 
     with open("last_map.pkl", "wb") as file:
         pickle.dump(map1, file)
@@ -114,9 +112,9 @@ def load_last_map(mp):
 
 
 
-map1 = load_last_map(map1)
-map0 = load_last_map(map0)
 map00 = load_last_map(map00)
+map0 = load_last_map(map0)
+map1 = load_last_map(map1)
 while loop:
     # clear and  
     display.fill((0, 0, 0))
@@ -144,21 +142,29 @@ while loop:
             # Delete all wit 'd'
             if event.key == K_d:
                 map1 = map_to_list()
+                map0 = map_to_list()
+                map00 = map_to_list()
 
-            if event.key == K_a:
-                place_block(letters[cnt], x, y, m=0)
-            if event.key == K_z:
-                place_block(letters[cnt], x, y, m=-1)
+            elif event.key == K_a:
+                place_block(letters[cnt], x, y, map0)
+                if pygame.mouse.get_pressed()[2]:
+                    place_block(" ", x, y, map0)
+
+            elif event.key == K_z:
+                place_block(letters[cnt], x, y, map00)
+                if pygame.mouse.get_pressed()[2]:
+                    place_block(" ", x, y, map00)
+
 
         # Place block with left mouse button
         if pygame.mouse.get_pressed()[0]:
-            place_block(letters[cnt], x, y)
+            place_block(letters[cnt], x, y, map1)
 
 
 
         # Place empty space with right mouse button
         elif pygame.mouse.get_pressed()[2]:
-            place_block(" ", x, y)
+            place_block(" ", x, y, map1)
         
         # Choose tiles scrolling the middle mouse wheel
         if event.type == pygame.MOUSEBUTTONDOWN:

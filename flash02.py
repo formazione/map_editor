@@ -7,9 +7,35 @@ import pickle
 
 
 pygame.init()
-W, H = w, h = WSIZE = ((928, 512))
+w, h = WSIZE = ((928, 512))
 screen = pygame.display.set_mode((w, h))
 display = pygame.Surface((w // 2, h // 2))
+
+def load_tiles(folder: str) -> list:
+    "Load tiles from a folder... with a number at the end"
+    listtiles2 = [x for x in glob(folder + "\\*.png")]
+    tile2 = [pygame.image.load(x) for x in listtiles2]
+    return tile2
+
+
+def load_map(filename: str, mp1: list):
+    "Resume a list with the data (letter) for the tiles to be displayed on display surface"
+    if filename in os.listdir():
+        with open(filename, "rb") as file:
+            mp = pickle.load(file)
+    else:
+        mp = mp1
+    return mp
+
+
+def show_map(mp1):
+    "Take the map list with letters and blit them as tiles on the display surface"
+    for y, line in enumerate(mp1):
+        for x, c in enumerate(line):
+            for n, l in enumerate(letters):
+                if c == l:
+                    display.blit(tile[n], (x * 16, y * 16))
+
 
 class Sprite(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -45,6 +71,8 @@ class Sprite(pygame.sprite.Sprite):
         self.image = img_list[int(self.counter)]
 
     def update(self):
+        global moveUp, moveLeft, moveRight, moveLeft, faceRight
+
         if moveRight:
             self.update_counter(.1, self.list)
             self.prov = self.dir
@@ -57,11 +85,28 @@ class Sprite(pygame.sprite.Sprite):
         if self.dir == "":
             self.update_counter(.1, self.list_idle)
 
-            if moveRight:
-                self.image = self.list_idle[int(self.counter)]
+            if faceRight:
+                self.image = self.list_idleflip[int(self.counter)]
 
             else:
-                self.image = self.list_idleflip[int(self.counter)]
+                self.image = self.list_idle[int(self.counter)]
+
+
+def show_tiles():
+    w = 0
+    n = 0
+    for num, t in enumerate(tile):
+        display.blit(t, (n * 16, w * 16))
+        if n == 10:
+            n = -1
+            w += 1
+        n += 1
+
+tile = load_tiles("imgs2")
+alphab = "QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm.,:;@#°^[]<>()&%$£€ABC1234567890òàèéù+-ì={}§!?/|"
+letters = [x for x in alphab[0:len(tile)]]
+map2 = []
+map2 = load_map("last_map2.pkl", map2)
 
 
 g = pygame.sprite.Group()
@@ -72,45 +117,8 @@ moveLeft = False
 moveRight = False
 moveUp = False
 moveDown = False
-
+faceRight = False
 MOVESPEED = 1
-
-def load_images(folder: str) -> list:
-    "Load tiles from a folder... with a number at the end"
-    listtiles2 = [x for x in glob(folder + "2\\*.png")]
-    tile2 = [pygame.image.load(x) for x in listtiles2]
-    return tile2
-
-
-def load_map(filename: str, mp1: list):
-    "Resume a list with the data (letter) for the tiles to be displayed on display surface"
-    if filename in os.listdir():
-        with open(filename, "rb") as file:
-            mp = pickle.load(file)
-    else:
-        mp = mp1
-    return mp
-
-
-def showmap(mp1):
-    "Take the map list with letters and blit them as tiles on the display surface"
-    for y, line in enumerate(mp1):
-        for x, c in enumerate(line):
-            for n, l in enumerate(letters):
-                if c == l:
-                    display.blit(tile[n], (x * 16, y * 16))
-
-
-# calls the function to load tiles from imgs2/
-tile = load_images("imgs")
-# create a list of all letters corrisponding to the tiles with images from imgs2 folder
-alphab = "QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm.,:;@#°^[]<>()&%$£€ABC1234567890òàèéù+-ì={}§!?/|"
-letters = [x for x in alphab[0:len(tile)]]
-map2 = []
-# Stores a list with letters = tiles from pkl file (created with pygame map editor)
-map2 = load_map("last_map2.pkl", map2)
-# bg = pygame.Surface((W, H))
-
 
 
 while True:
@@ -121,15 +129,15 @@ while True:
             sys.exit()
         if event.type == KEYDOWN:
             # Change the keyboard variables.
-            if event.key == K_s:
-                pygame.image.save(screen, "screenshot.png")
             if event.key == K_LEFT or event.key == K_a:
                 moveRight = False
                 moveLeft = True
+                faceRight = True
             if event.key == K_RIGHT or event.key == K_d:
                 moveLeft = False
                 moveRight = True
-                # player.image = player.list[int(player.counter)]
+                faceRight = False
+                player.image = player.list[int(player.counter)]
             if event.key == K_UP or event.key == K_w:
                 moveDown = False
                 moveUp = True
@@ -154,8 +162,10 @@ while True:
                 moveDown = False
 
 # Draw the white background onto the surface.
-    # screen.fill((255, 255, 255))
+    screen.fill((255, 255, 255))
 
+    # show_tiles()
+    show_map(map2)
     # Move the player.
     if moveDown and player.rect.bottom < h:
         player.rect.top += MOVESPEED
@@ -163,29 +173,26 @@ while True:
         player.rect.top -= MOVESPEED
     if moveLeft and player.rect.left > -35:
         player.rect.left -= MOVESPEED
-        try:
-            player.counter += .1
-            player.image = pygame.transform.flip(player.list[int(player.counter)], True, False)
-        except:
-            player.counter = 0
-            player.image = pygame.transform.flip(player.list[int(player.counter)], True, False)
+        # try:
+        #     player.counter += .1
+        player.image = player.listflip[int(player.counter)]
+        # except:
+        #     player.counter = 0
+            # player.image = player.listflip[int(player.counter)]
     if moveRight and player.rect.right < w + 35:
         player.rect.right += MOVESPEED
-        try:
-            player.counter -= .1
-            player.image = player.list[int(player.counter)]
-        except:
-            player.counter = 0
-            player.image = player.list[int(player.counter)]
+        # try:
+            # player.counter -= .1
+        player.image = player.list[int(player.counter)]
+        # except:
+        #     player.counter = 0
+        #     player.image = player.list[int(player.counter)]
 
     # Draw the player onto the surface.
-    screen.fill((0, 0, 0))
-    screen.blit(pygame.transform.scale(display, (w, h)), (0, 0))
-    showmap(map2)
+    screen.blit(pygame.transform.scale(display, (w, h)), (0,0))
     g.draw(screen)
-
     g.update()
-    # Draw the window onto the screen.
+    # Draw the window onto the screen
     pygame.display.update()
     clock.tick(120)
 

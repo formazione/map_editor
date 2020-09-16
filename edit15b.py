@@ -3,13 +3,12 @@ import pygame
 import os
 from glob import glob
 import pickle
-from list_box_tut import *
 from time import time
 from tkinter import filedialog
 
 
 def load_images(folder):
-    # This has things to overlay onto layer 1
+    "creates 4 list of images/surfaces for the 4 layers"
     listtiles2 = [x for x in glob(folder + "2\\*.png")]
     listtiles1 = [x for x in glob(folder + "1\\*.png")]
     listtiles0 = [x for x in glob(folder + "0\\*.png")]
@@ -22,6 +21,7 @@ def load_images(folder):
 
 
 def init_display():
+    "Initializing pygame, fonts... display and screen"
     global screen, tile2, tile1, tile0, tile00, display
     global WINDOW_SIZE, cnt, clock, text
     global font
@@ -32,7 +32,7 @@ def init_display():
     screen = pygame.display.set_mode(WINDOW_SIZE, 0, 32)
     display = pygame.Surface((WINDOW_SIZE[0] // 2, WINDOW_SIZE[1] // 2))
     tile2, tile1, tile0, tile00 = load_images("imgs")
-    text = font.render("Pygame map editor - Level 1, press p o i u for level 1 2 3 4", 0, (222, 255, 0))
+    text = font.render("Pygame MAP EDITOR", 0, (222, 255, 0))
     clock = pygame.time.Clock()
 
 
@@ -56,28 +56,18 @@ def blit_tiles(mp1):
         if mp1 == assoc[0]:
             tile, letters = assoc[1:]
 
-    # if mp1 == map1:
-    #     tile = tile1
-    #     letters = letters1
-    # if mp1 == map0:
-    #     tile = tile0
-    #     letters = letters0
-    # if mp1 == map00:
-    #     tile = tile00
-    #     letters = letters00
 
     for y, line in enumerate(mp1):
+        # for each carachter 
         for x, c in enumerate(line):
-            for n, l in enumerate(letters):
-                if c == l:
-                    display.blit(tile[n], (x * 16, y * 16))
+            for n in letters:
+                if c != 0:
+                    display.blit(tile[c], (x * 16, y * 16))
+
 
 def map_to_list():
     "Creates a list of 16 lists with 29 empty spaces as items"
     map1 = []
-    for x in range(16):
-        line = [x for x in "                             "]
-        map1.append(line)
     return map1
 
 
@@ -95,6 +85,7 @@ map_name = f"map{num_file}.png"
 # This places a brick or a tile when hit button left
 # deletes bricks/blit_tiles when hit button right
 def place_block(actual_tile, x, y, mp):
+    print(actual_tile)
     x, y = get_x_y()
     mp[y][x] =  actual_tile
 
@@ -103,6 +94,7 @@ def get_x_y():
     x, y = pygame.mouse.get_pos()
     pos = x, y = x // 32, y // 32
     return pos
+
 
 def save_last_map():
     with open("last_map2.pkl", "wb") as file:
@@ -113,6 +105,7 @@ def save_last_map():
         pickle.dump(map0, file)
     with open("last_map00.pkl", "wb") as file:
         pickle.dump(map00, file)
+
 
 def save_map():
     tm = time()
@@ -137,11 +130,11 @@ def load_last_map(filename, mp1):
 
 # Letter used for the blit_tiles, automatically chosen depending on the images in folder imgs
 # just add images in the folder imgs and the code will assign a letter
-alphab = "QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm.,:;@#°^[]<>()&%$£€ABC1234567890òàèéù+-ì={}§!?/|"
-letters2 = [x for x in alphab[0:len(tile2)]]
-letters1 = [x for x in alphab[0:len(tile1)]]
-letters0 = [x for x in alphab[0:len(tile0)]]
-letters00 = [x for x in alphab[0:len(tile00)]]
+
+letters2 = [x for x in range(len(tile2))]
+letters1 = [x for x in range(len(tile1))]
+letters0 = [x for x in range(len(tile0))]
+letters00 = [x for x in range(len(tile00))]
 # Create the map
 
 map2 = map_to_list()
@@ -149,12 +142,19 @@ map1 = map_to_list()
 map0 = map_to_list()
 map00 = map_to_list()
 
-map00 = load_last_map("last_map00.pkl", map00)
-map0 = load_last_map("last_map0.pkl", map0)
-map1 = load_last_map("last_map1.pkl", map1)
-map2 = load_last_map("last_map2.pkl", map2)
+map00 = load_last_map("map00.pkl", map00)
+map0 = load_last_map("map0.pkl", map0)
+map1 = load_last_map("map1.pkl", map1)
+map2 = load_last_map("map2.pkl", map2)
+
+print(map2)
 
 layer = "2"
+
+
+def show_tiles_num(cnt, x, y):
+    xnum = font.render(str(layer) + ") " + str(cnt), 1, pygame.Color("White"))
+    display.blit(xnum, (x-30, y))
 
 
 def pointer_tiles():
@@ -164,12 +164,16 @@ def pointer_tiles():
     y -= 14
     x, y = x // 2, y // 2
     if layer == "2":
+        show_tiles_num(cnt2, x, y)
         display.blit(tile2[cnt2], (x, y))
     elif layer == "1":
+        show_tiles_num(cnt1, x, y)
         display.blit(tile1[cnt1], (x, y))
     elif layer == "0":
+        show_tiles_num(cnt0, x, y)
         display.blit(tile0[cnt0], (x, y))
     elif layer == "00":
+        show_tiles_num(cnt00, x, y)
         display.blit(tile00[cnt00], (x, y))
     # ==================================================
 
@@ -186,14 +190,25 @@ def tilesrolldown(cnt, letters):
         cnt = len(letters) - 1
     return cnt
 
+
+show_layer00 = 1
+show_layer0 = 1
+show_layer1 = 1
+show_layer2 = 1
+
+
 loop = 1
 while loop:
     # clear and  
     display.fill((0, 0, 0))
-    blit_tiles(map00)
-    blit_tiles(map0)
-    blit_tiles(map1)
-    blit_tiles(map2)
+    if show_layer00:
+        blit_tiles(map00)
+    if show_layer0:
+        blit_tiles(map0)
+    if show_layer1:
+        blit_tiles(map1)
+    if show_layer2:
+        blit_tiles(map2)
     display.blit(text, (0, 0))
     
     for event in pygame.event.get():
@@ -207,8 +222,21 @@ while loop:
             # Save screen with 's'
             if event.key == K_s:
                 pygame.image.save(screen, map_name)
+                os.startfile(map_name)
+
+            # toggle layers ============================ 1.5
 
             if event.key == K_l:
+                show_layer2 = False if show_layer2 else True
+            if event.key == K_k:
+                show_layer1 = False if show_layer1 else True
+            if event.key == K_j:
+                show_layer0 = False if show_layer0 else True
+            if event.key == K_h:
+                show_layer00 = False if show_layer00 else True
+
+            # Shows mouse position =======================
+            if event.key == K_m:
                 x, y = pygame.mouse.get_pos()
                 text = font.render(f"{x},{y}", 1, (244, 0, 0))
 
@@ -256,13 +284,13 @@ while loop:
         # Place empty space with right mouse button
         elif pygame.mouse.get_pressed()[2]:
                     if layer == "2":
-                        place_block(" ", x, y, map2)
+                        place_block(0, x, y, map2)
                     elif layer == "1":
-                        place_block(" ", x, y, map1)
+                        place_block(0, x, y, map1)
                     elif layer == "0":
-                        place_block(" ", x, y, map0)
+                        place_block(0, x, y, map0)
                     elif layer == "00":
-                        place_block(" ", x, y, map00)
+                        place_block(0, x, y, map00)
         
         # Choose tiles scrolling the middle mouse wheel
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -292,4 +320,5 @@ while loop:
     screen.blit(pygame.transform.scale(display, WINDOW_SIZE), (0, 0))
     pygame.display.update()
     clock.tick(30)
+
 pygame.quit()

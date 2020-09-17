@@ -13,25 +13,25 @@ def load_images(folder):
     listtiles1 = [x for x in glob(folder + "1\\*.png")]
     listtiles0 = [x for x in glob(folder + "0\\*.png")]
     listtiles00 = [x for x in glob(folder + "00\\*.png")]
-    tile2 = [pygame.image.load(x) for x in listtiles2]
+    tile20 = [pygame.image.load(x) for x in listtiles2]
     tile1 = [pygame.image.load(x) for x in listtiles1]
     tile0 = [pygame.image.load(x) for x in listtiles0]
     tile00 = [pygame.image.load(x) for x in listtiles00]
-    return tile2, tile1, tile0, tile00
+    return tile20, tile1, tile0, tile00
 
 
 def init_display():
     "Initializing pygame, fonts... display and screen"
-    global screen, tile2, tile1, tile0, tile00, display
+    global screen, tile20, tile1, tile0, tile00, display
     global WINDOW_SIZE, cnt, clock, text
     global font
 
     pygame.init()
     font = pygame.font.SysFont("Arial", 12)
-    WINDOW_SIZE = (464 * 2, 256 * 2)
+    WINDOW_SIZE = (464 * 3, 256 * 3)
     screen = pygame.display.set_mode(WINDOW_SIZE, 0, 32)
-    display = pygame.Surface((WINDOW_SIZE[0] // 2, WINDOW_SIZE[1] // 2))
-    tile2, tile1, tile0, tile00 = load_images("imgs")
+    display = pygame.Surface((464, 256))
+    tile20, tile1, tile0, tile00 = load_images("imgs")
     text = font.render("Pygame MAP EDITOR", 0, (222, 255, 0))
     clock = pygame.time.Clock()
 
@@ -47,7 +47,7 @@ def blit_tiles(mp1):
     global tile, letters
 
     associations = [
-        [map2, tile2, letters2],
+        [map2, tile20, letters2],
         [map1, tile1, letters1],
         [map0, tile0, letters0],
         [map00, tile00, letters00]]
@@ -92,7 +92,7 @@ def map_to_list():
 
 pygame.init()
 init_display()
-last_pos = x, y = pygame.mouse.get_pos()
+pos = x, y = pygame.mouse.get_pos()
 # letter = "spazio"
 num_file = len(os.listdir())
 map_name = f"map{num_file}.png"
@@ -115,34 +115,34 @@ def copy_block(x, y, mp):
 
 def get_x_y():
     x, y = pygame.mouse.get_pos()
-    pos = x, y = x // 32, y // 32
+    pos = x, y = x // 48, y // 48
     return pos
 
 
-def save_last_map():
-    with open("last_map2.pkl", "wb") as file:
-        pickle.dump(map2, file)
-    with open("last_map1.pkl", "wb") as file:
-        pickle.dump(map1, file)
-    with open("last_map0.pkl", "wb") as file:
-        pickle.dump(map0, file)
-    with open("last_map00.pkl", "wb") as file:
-        pickle.dump(map00, file)
-
-
 def save_map():
-    tm = time()
-    with open(f"pkl\\map{time}2.pkl", "wb") as file:
+    with open("map2.pkl", "wb") as file:
         pickle.dump(map2, file)
-    with open(f"pkl\\map{time}1.pkl", "wb") as file:
+    with open("map1.pkl", "wb") as file:
         pickle.dump(map1, file)
-    with open(f"pkl\\mao{time}0.pkl", "wb") as file:
+    with open("map0.pkl", "wb") as file:
         pickle.dump(map0, file)
-    with open(f"pk\\map{time}00.pkl", "wb") as file:
+    with open("map00.pkl", "wb") as file:
         pickle.dump(map00, file)
 
 
-def load_last_map(filename, mp1):
+def store_maps():
+    tm = time()
+    with open(f"pkl\\map2.pkl", "wb") as file:
+        pickle.dump(map2, file)
+    with open(f"pkl\\map1.pkl", "wb") as file:
+        pickle.dump(map1, file)
+    with open(f"pkl\\map0.pkl", "wb") as file:
+        pickle.dump(map0, file)
+    with open(f"pk\\map00.pkl", "wb") as file:
+        pickle.dump(map00, file)
+
+
+def load_map(filename, mp1):
     if filename in os.listdir():
         with open(filename, "rb") as file:
             mp = pickle.load(file)
@@ -154,7 +154,7 @@ def load_last_map(filename, mp1):
 # Letter used for the blit_tiles, automatically chosen depending on the images in folder imgs
 # just add images in the folder imgs and the code will assign a letter
 
-letters2 = [x for x in range(len(tile2))]
+letters2 = [x for x in range(len(tile20))]
 letters1 = [x for x in range(len(tile1))]
 letters0 = [x for x in range(len(tile0))]
 letters00 = [x for x in range(len(tile00))]
@@ -165,10 +165,10 @@ map1 = map_to_list()
 map0 = map_to_list()
 map00 = map_to_list()
 
-map00 = load_last_map("map00.pkl", map00)
-map0 = load_last_map("map0.pkl", map0)
-map1 = load_last_map("map1.pkl", map1)
-map2 = load_last_map("map2.pkl", map2)
+map00 = load_map("map00.pkl", map00)
+map0 = load_map("map0.pkl", map0)
+map1 = load_map("map1.pkl", map1)
+map2 = load_map("map2.pkl", map2)
 
 print(map2)
 
@@ -185,10 +185,10 @@ def pointer_tiles():
     x, y = pygame.mouse.get_pos()
     x -= 14
     y -= 14
-    x, y = x // 2, y // 2
+    x, y = x // 3, y // 3
     if layer == "2":
         show_tiles_num(cnt2, x, y)
-        display.blit(tile2[cnt2], (x, y))
+        display.blit(tile20[cnt2], (x, y))
     elif layer == "1":
         show_tiles_num(cnt1, x, y)
         display.blit(tile1[cnt1], (x, y))
@@ -223,7 +223,7 @@ show_layer2 = 1
 loop = 1
 while loop:
     # clear and  
-    display.fill((0, 0, 0))
+    display.fill((25, 75, 150))
     if show_layer00:
         blit_tiles(map00)
     if show_layer0:
@@ -236,11 +236,11 @@ while loop:
     
     for event in pygame.event.get():
         if event.type == QUIT:
-            save_last_map()
+            save_map()
             loop = 0
         if event.type == pygame.KEYDOWN:
             if event.key == K_ESCAPE:
-                save_last_map()
+                save_map()
                 loop = 0
             # Save screen with 's'
             if event.key == K_s:

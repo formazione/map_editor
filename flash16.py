@@ -92,9 +92,12 @@ class Sprite(pygame.sprite.Sprite):
             else:
                 self.image = self.list_idle[int(self.counter)]
 
+def fps():
+    fr = "Fps: " + str(int(clock.get_fps()))
+    frt = font.render(fr, 1, pygame.Color("coral"))
+    return frt
 
-
-
+font = pygame.font.SysFont("Arial", 14)
 tile = load_tiles("imgs2")
 alphab = "QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm.,:;@#°^[]<>()&%$£€ABC1234567890òàèéù+-ì={}§!?/|"
 letters = [x for x in alphab[0:len(tile)]]
@@ -186,6 +189,7 @@ while True:
     g.draw(display)
     g.update()
     screen.blit(pygame.transform.scale(display, (w, h)), (0,0))
+    screen.blit(fps(), (10, 0))
     # Draw the window onto the screen
     pygame.display.update()
     clock.tick(60)

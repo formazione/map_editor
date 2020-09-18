@@ -30,13 +30,20 @@ def load_map(filename: str, mp1: list):
 
 def show_map(mp1):
     "Take the map list with letters and blit them as tiles on the display surface"
+    display.fill((0, 0, 100))
     for y, line in enumerate(mp1):
         # for each carachter 
         for x, c in enumerate(line):
             for n in letters:
                 if c != 0:
                     display.blit(tile[c], (x * 16, y * 16))
+    return display
 
+
+def fps():
+    fr = "Fps: " + str(int(clock.get_fps()))
+    frt = font.render(fr, 1, pygame.Color("coral"))
+    return frt
 
 class Sprite(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -48,10 +55,10 @@ class Sprite(pygame.sprite.Sprite):
         self.load_images()
 
     def load(self, x):
-        return pygame.image.load(x).convert_alpha()
+        return pygame.transform.scale(pygame.image.load(x).convert_alpha(), (48, 48))
 
     def flip(self, x):
-        return pygame.transform.flip(self.load(x), 1, 0)
+        return pygame.transform.scale(pygame.transform.flip(self.load(x), 1, 0), (48, 48))
 
     def load_images(self):
         self.list = [self.load(f) for f in self.dogwalking]
@@ -72,9 +79,9 @@ class Sprite(pygame.sprite.Sprite):
         self.image = img_list[int(self.counter)]
 
     def update(self):
-        global moveUp, moveLeft, moveRight, moveLeft, faceRight
+        global moveUp, moveLeft, moving_right, moveLeft, faceRight
 
-        if moveRight:
+        if moving_right:
             self.update_counter(.1, self.list)
             self.prov = self.dir
 
@@ -93,30 +100,47 @@ class Sprite(pygame.sprite.Sprite):
                 self.image = self.list_idle[int(self.counter)]
 
 
+class Display(pygame.sprite.Sprite):
+    def __init__(self, image):
+        super(Display, self).__init__()
+        self.image = image
+        w, h = self.image.get_size()
+        self.rect = pygame.Rect(0, 0, w, h)
+        g.add(self)
 
 
 tile = load_tiles("imgs2")
-alphab = "QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm.,:;@#°^[]<>()&%$£€ABC1234567890òàèéù+-ì={}§!?/|"
-letters = [x for x in alphab[0:len(tile)]]
+letters = [x for x in range(len(tile))]
 map2 = []
-map2 = load_map("map2.pkl", map2)
 
 
 g = pygame.sprite.Group()
+map2 = load_map("map2.pkl", map2)
+display_surface = Display(pygame.transform.scale(show_map(map2), (w, h)))
+# g.add(display_surface)
+
+
 # ================================= Sprite Player ====
 player = Sprite(50, 128)
 clock = pygame.time.Clock()
 
 moveLeft = False
-moveRight = False
+moving_right = False
 moveUp = False
 moveDown = False
 faceRight = False
-MOVESPEED = 1
-
+MOVESPEED = 3
+font = pygame.font.SysFont("Arial", 14)
 
 while True:
 # Check for events.
+
+    # MOVEMENT CHECKS
+    # player_movement = [0,0]
+    # if moving_right == True:
+    #     player_movement[0] += 1
+
+
     for event in pygame.event.get():
         if event.type == QUIT:
             pygame.quit()
@@ -124,12 +148,12 @@ while True:
         if event.type == KEYDOWN:
             # Change the keyboard variables.
             if event.key == K_LEFT or event.key == K_a:
-                moveRight = False
+                moving_right = False
                 moveLeft = True
                 faceRight = True
             if event.key == K_RIGHT or event.key == K_d:
                 moveLeft = False
-                moveRight = True
+                moving_right = True
                 faceRight = False
                 player.image = player.list[int(player.counter)]
             if event.key == K_UP or event.key == K_w:
@@ -149,17 +173,16 @@ while True:
             if event.key == K_LEFT or event.key == K_a:
                 moveLeft = False
             if event.key == K_RIGHT or event.key == K_d:
-                moveRight = False
+                moving_right = False
             if event.key == K_UP or event.key == K_w:
                 moveUp = False
             if event.key == K_DOWN or event.key == K_s:
                 moveDown = False
 
 # Draw the white background onto the surface.
-    display.fill((50, 75, 100))
+    # display.fill((50, 75, 100))
 
 
-    show_map(map2)
     # Move the player.
     if moveDown and player.rect.bottom < h:
         player.rect.top += MOVESPEED
@@ -173,7 +196,7 @@ while True:
         # except:
         #     player.counter = 0
             # player.image = player.listflip[int(player.counter)]
-    if moveRight and player.rect.right < w + 35:
+    if moving_right and player.rect.right < w + 35:
         player.rect.right += MOVESPEED
         # try:
             # player.counter -= .1
@@ -183,9 +206,11 @@ while True:
         #     player.image = player.list[int(player.counter)]
 
     # Draw the player onto the surface.
-    g.draw(display)
+    # screen.fill((0, 0, 90))
+    # screen.blit(display, (0,0))
+    g.draw(screen)
     g.update()
-    screen.blit(pygame.transform.scale(display, (w, h)), (0,0))
+    screen.blit(fps(), (10, 0))
     # Draw the window onto the screen
     pygame.display.update()
     clock.tick(60)

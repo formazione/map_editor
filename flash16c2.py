@@ -7,9 +7,8 @@ import pickle
 
 
 pygame.init()
-w, h = WSIZE = ((464 * 3, 256 * 3))
+w, h = WSIZE = ((464 * 3, 256 * 3)) # 1392 x 768
 screen = pygame.display.set_mode((w, h))
-display = pygame.Surface((464, 256))
 
 def load_tiles(folder: str) -> list:
     "Load tiles from a folder... with a number at the end"
@@ -28,19 +27,44 @@ def load_map(filename: str, mp1: list):
     return mp
 
 
-def show_map(mp1):
-    "Takes the list with the number associated with tiles and shows the tiles"
-    
-    display.fill((0, 100, 140))
-
-    for y, line in enumerate(mp1):
-        # for each carachter 
+tiles_rects = []
+def show_layer(layer, tile, temp_surface):
+    for y, line in enumerate(layer):
         for x, c in enumerate(line):
-            for n in letters:
-                if c != 0:
-                    display.blit(tile[c], (x * 16, y * 16))
-    return display
+            if c != 0:
+                temp_surface.blit(tile[c], (x * 16, y * 16))
+                tiles_rects.append(Tile(tile[c], x, y))
+    return temp_surface
 
+
+def collision_test(rect, tiles):
+    hit_list = []
+    for tile in tiles:
+        if rect.colliderect(tile):
+            hit_list.append(tile)
+    return hit_list
+
+# def show_layer(layer, tile):
+#     for y, line in enumerate(layer):
+#         for x, c in enumerate(line):
+#             if c != 0:
+#                 temp_surface.blit(tile[c], (x * 16, y * 16))
+
+
+def show_map():
+    "Takes the list with the number associated with tiles and shows the tiles"
+    global tile1, tile2
+
+    display = pygame.Surface((464 * 3, 256 * 3))
+    temp_surface = pygame.Surface((464, 256))
+    # display.fill((0, 0, 0, 0))
+    show_layer
+    for y, line in enumerate(layer1):
+        for x, c in enumerate(line):
+            if c != 0:
+                temp_surface.blit(tile1[c], (x * 16, y * 16))
+    display.blit(pygame.transform.scale(temp_surface, (w, h)), (0, 0))
+    Display(display)
 
 def fps():
     "frame rate"
@@ -83,8 +107,11 @@ class Sprite(pygame.sprite.Sprite):
         self.image = img_list[int(self.counter)]
 
     def update(self):
-        global moveUp, moveLeft, moving_right, moveLeft, faceRight
+        global moveUp, moveLeft, moving_right, moveLeft, faceRight, tiles_rects
 
+        for t in tiles_rects:
+            if not t.rect.colliderect(player):
+                self.rect.top += 1
         if moving_right:
             self.update_counter(.1, self.list)
             self.prov = self.dir
@@ -109,25 +136,41 @@ class Display(pygame.sprite.Sprite):
         "Gets the surface of the display with the map and transform it in a map"
         super(Display, self).__init__()
         self.image = image
-        w, h = self.image.get_size()
-        self.rect = pygame.Rect(0, 0, w, h)
+        wd, hd = self.image.get_size()
+        self.rect = pygame.Rect(0, 0, wd, hd)
         g.add(self)
 
 
+class Tile(pygame.sprite.Sprite):
+    def __init__(self, image, x, y):
+        "Gets the surface of the display with the map and transform it in a map"
+        super(Tile, self).__init__()
+        self.image = image
+        w, h = self.image.get_size()
+        self.rect = pygame.Rect(0, 0, w, h)
+        #g.add(self)
+
 # ========================= GLOBAL SCOPE ===============
-tile = load_tiles("imgs2")
-letters = [x for x in range(len(tile))]
-map2 = []
-
-
+tile1 = load_tiles("imgs1")
+tile2 = load_tiles("imgs2")
+tile3 = load_tiles("imgs3")
+tile4 = load_tiles("imgs4")
+layer4 = []
+layer3 = []
+layer2 = []
+layer1 = []
 g = pygame.sprite.Group()
-map2 = load_map("map2.pkl", map2)
-display_surface = Display(pygame.transform.scale(show_map(map2), (w, h)))
-# g.add(display_surface)
+# Load, scale and show the layers
+layer4 = load_map("layer4.pkl", layer4)
+layer3 = load_map("layer3.pkl", layer3)
+layer2 = load_map("layer2.pkl", layer2)
+layer1 = load_map("layer1.pkl", layer1)
+show_map()
+player = Sprite(50, 128)
+
 
 
 # ================================= Sprite Player ====
-player = Sprite(50, 128)
 # Clock initialization for the frame rate
 clock = pygame.time.Clock()
 
@@ -169,7 +212,8 @@ while True:
             if event.key == K_DOWN or event.key == K_s:
                 moveUp = False
                 moveDown = True
-
+            if event.key == K_x:
+                print(player.rect.x, player.rect.y)
         # KEYUP
 
         if event.type == KEYUP:
@@ -212,6 +256,7 @@ while True:
         #     player.counter = 0
         #     player.image = player.list[int(player.counter)]
 
+    
     # Draw the player onto the surface.
     # screen.fill((0, 0, 90))
     # screen.blit(display, (0,0))
@@ -223,3 +268,4 @@ while True:
     clock.tick(60)
 
 pygame.quit()
+sys.exit()

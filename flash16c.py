@@ -9,13 +9,13 @@ import pickle
 pygame.init()
 w, h = WSIZE = ((464 * 3, 256 * 3))
 screen = pygame.display.set_mode((w, h))
-display = pygame.Surface((464, 256))
 
 def load_tiles(folder: str) -> list:
     "Load tiles from a folder... with a number at the end"
     listtiles2 = [x for x in glob(folder + "\\*.png")]
     tile2 = [pygame.image.load(x) for x in listtiles2]
     return tile2
+
 
 
 def load_map(filename: str, mp1: list):
@@ -28,18 +28,28 @@ def load_map(filename: str, mp1: list):
     return mp
 
 
-def show_map(mp1):
-    "Takes the list with the number associated with tiles and shows the tiles"
-    
-    display.fill((0, 100, 140))
 
-    for y, line in enumerate(mp1):
-        # for each carachter 
+def show_layer(layer, tile):
+    for y, line in enumerate(layer):
         for x, c in enumerate(line):
-            for n in letters:
-                if c != 0:
-                    display.blit(tile[c], (x * 16, y * 16))
-    return display
+            if c != 0:
+                temp_surface.blit(tile[c], (x * 16, y * 16))
+
+
+def show_map():
+    "Takes the list with the number associated with tiles and shows the tiles"
+    global tile1, tile2
+
+    display = pygame.Surface((464 * 3, 256 * 3))
+    temp_surface = pygame.Surface((464, 256))
+    # display.fill((0, 0, 0, 0))
+    show_layer
+    for y, line in enumerate(layer1):
+        for x, c in enumerate(line):
+            if c != 0:
+                temp_surface.blit(tile1[c], (x * 16, y * 16))
+    display.blit(pygame.transform.scale(temp_surface, (w, h)), (0, 0))
+    Display(display)
 
 
 def fps():
@@ -83,9 +93,9 @@ class Sprite(pygame.sprite.Sprite):
         self.image = img_list[int(self.counter)]
 
     def update(self):
-        global moveUp, moveLeft, moving_right, moveLeft, faceRight
+        global moveUp, moveLeft, moveRight, moveDown, faceRight
 
-        if moving_right:
+        if moveRight:
             self.update_counter(.1, self.list)
             self.prov = self.dir
 
@@ -115,15 +125,18 @@ class Display(pygame.sprite.Sprite):
 
 
 # ========================= GLOBAL SCOPE ===============
-tile = load_tiles("imgs2")
-letters = [x for x in range(len(tile))]
-map2 = []
-
-
+tile1 = load_tiles("imgs1")
+tile2 = load_tiles("imgs2")
+layer2 = []
+layer1 = []
 g = pygame.sprite.Group()
-map2 = load_map("map2.pkl", map2)
-display_surface = Display(pygame.transform.scale(show_map(map2), (w, h)))
-# g.add(display_surface)
+
+# Load, scale and show the layers
+layer1 = load_map("layer1.pkl", layer1)
+layer2 = load_map("layer2.pkl", layer2)
+show_map()
+
+# l1 = pygame.transform.scale(show_map(layer1), (w, h))
 
 
 # ================================= Sprite Player ====
@@ -132,7 +145,7 @@ player = Sprite(50, 128)
 clock = pygame.time.Clock()
 
 moveLeft = False
-moving_right = False
+moveRight = False
 moveUp = False
 moveDown = False
 faceRight = False
@@ -140,13 +153,6 @@ MOVESPEED = 3
 font = pygame.font.SysFont("Arial", 14)
 
 while True:
-# Check for events.
-
-    # MOVEMENT CHECKS
-    # player_movement = [0,0]
-    # if moving_right == True:
-    #     player_movement[0] += 1
-
 
     for event in pygame.event.get():
         if event.type == QUIT:
@@ -155,12 +161,12 @@ while True:
         if event.type == KEYDOWN:
             # Change the keyboard variables.
             if event.key == K_LEFT or event.key == K_a:
-                moving_right = False
+                moveRight = False
                 moveLeft = True
                 faceRight = True
             if event.key == K_RIGHT or event.key == K_d:
                 moveLeft = False
-                moving_right = True
+                moveRight = True
                 faceRight = False
                 player.image = player.list[int(player.counter)]
             if event.key == K_UP or event.key == K_w:
@@ -180,7 +186,7 @@ while True:
             if event.key == K_LEFT or event.key == K_a:
                 moveLeft = False
             if event.key == K_RIGHT or event.key == K_d:
-                moving_right = False
+                moveRight = False
             if event.key == K_UP or event.key == K_w:
                 moveUp = False
             if event.key == K_DOWN or event.key == K_s:
@@ -203,7 +209,7 @@ while True:
         # except:
         #     player.counter = 0
             # player.image = player.listflip[int(player.counter)]
-    if moving_right and player.rect.right < w + 35:
+    if moveRight and player.rect.right < w + 35:
         player.rect.right += MOVESPEED
         # try:
             # player.counter -= .1
